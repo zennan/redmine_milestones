@@ -1,3 +1,5 @@
+var NS4 = (navigator.appName == "Netscape" && parseInt(navigator.appVersion) < 5);
+
 function milestone_type_changed()
 {
     selected = $('milestone_kind').value;
@@ -68,21 +70,21 @@ function planned_end_date_radio_changed()
 
 function start_date_radio_changed()
 {
-    if (!$('milestone_fixed_start_date_true').checked)
+    if (!$('milestone_fixed_start_date_true').is(":checked"))
     {
-        $('milestone_start_date').disable();
-        $('milestone_start_date_trigger').hide();
-        $('milestone_previous_start_date_milestone_id').enable();
-        $('milestone_start_date_offset').enable();
+        $('milestone_start_date').attr('disabled', true);
+        //$('milestone_start_date_trigger').hide();
+        $('milestone_previous_start_date_milestone_id').removeAttr('disabled');
+        $('milestone_start_date_offset').removeAttr('disabled');
         // Chrome bug workaround. In chrome link cannot reappear if simply hidden/shown twice
-        $('recalculate_start_date').appear({duration: 0.2});
+        $('recalculate_start_date').show();
     }
     else
     {
-        $('milestone_start_date').enable();
-        $('milestone_start_date_trigger').show();
-        $('milestone_previous_start_date_milestone_id').disable();
-        $('milestone_start_date_offset').disable();
+        $('milestone_start_date').show().removeAttr('disabled');
+        //$('milestone_start_date_trigger').show();
+        $('milestone_previous_start_date_milestone_id').attr('disabled', true);
+        $('milestone_start_date_offset').attr('disabled', true);
         $('recalculate_start_date').hide();
     }
 }
@@ -237,24 +239,69 @@ function show_hidden_milestones_changed()
     }
 }
 
-function move_selected_to_assigned()
+function move_selected_to_assigned(Form)
 {
-    move('available_projects', 'milestone_assigned_projects');
+    moveOptions(Form.available_projects, Form.milestone_assigned_projects);
 }
 
-function move_selected_milestone_to_assigned()
+function move_selected_milestone_to_assigned(Form)
 {
-    move('available_milestones', 'milestone_assigned_milestones');
+    moveOptions(Form.available_milestones, Form.milestone_assigned_milestones);
 }
 
-function move_assigned_to_selected()
+function move_assigned_to_selected(Form)
 {
-    move('milestone_assigned_projects', 'available_projects');
+    moveOptions(Form.milestone_assigned_projects, Form.available_projects);
 }
 
-function move_assigned_milestone_to_selected()
+function move_assigned_milestone_to_selected(Form)
 {
-    move('milestone_assigned_milestones', 'available_milestones');
+    moveOptions(Form.milestone_assigned_milestones, Form.available_milestones);
+}
+
+function addOption(theSel, theText, theValue)
+{
+  var newOpt = new Option(theText, theValue);
+  var selLength = theSel.length;
+  theSel.options[selLength] = newOpt;
+}
+
+function deleteOption(theSel, theIndex)
+{
+  var selLength = theSel.length;
+  if(selLength>0)
+  {
+    theSel.options[theIndex] = null;
+  }
+}
+
+function moveOptions(theSelFrom, theSelTo)
+{
+
+  var selLength = theSelFrom.length;
+  var selectedText = new Array();
+  var selectedValues = new Array();
+  var selectedCount = 0;
+
+  var i;
+
+  for(i=selLength-1; i>=0; i--)
+  {
+    if(theSelFrom.options[i].selected)
+    {
+      selectedText[selectedCount] = theSelFrom.options[i].text;
+      selectedValues[selectedCount] = theSelFrom.options[i].value;
+      deleteOption(theSelFrom, i);
+      selectedCount++;
+    }
+  }
+
+  for(i=selectedCount-1; i>=0; i--)
+  {
+    addOption(theSelTo, selectedText[i], selectedValues[i]);
+  }
+
+  if(NS4) history.go(0);
 }
 
 function move(to, from)
@@ -267,14 +314,14 @@ function move(to, from)
     }
 }
 
-function select_assigned()
+function select_assigned(Form)
 {
-    var assigned = $('milestone_assigned_projects');
+    var assigned = Form.milestone_assigned_projects;
     for (x = 0; x < assigned.options.length; x++)
     {
         assigned.options[x].selected = true;
     }
-    var assigned = $('milestone_assigned_milestones');
+    var assigned = Form.milestone_assigned_milestones;
     for (x = 0; x < assigned.options.length; x++)
     {
         assigned.options[x].selected = true;
